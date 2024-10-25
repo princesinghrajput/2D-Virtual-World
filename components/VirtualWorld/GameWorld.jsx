@@ -40,8 +40,8 @@ const StarIcon = () => (
 );
 
 const GameWorld = ({ worldData, players }) => (
-  <Card className="p-4 bg-white/90 backdrop-blur-sm shadow-lg">
-    <div className="relative" style={{ 
+  <Card className="p-4 bg-gradient-to-br from-gray-900/90 to-indigo-900/90 backdrop-blur-lg shadow-2xl rounded-2xl border border-indigo-500/50">
+    <div className="relative overflow-hidden rounded-lg" style={{ 
       width: WORLD_SIZE * TILE_SIZE,
       height: WORLD_SIZE * TILE_SIZE,
     }}>
@@ -52,8 +52,9 @@ const GameWorld = ({ worldData, players }) => (
             <div
               key={`${x}-${y}`}
               className={`
-                w-10 h-10 border border-slate-300
+                w-10 h-10 border border-indigo-800/30
                 bg-gradient-to-br ${TERRAIN_TYPES[tile].color} flex items-center justify-center
+                transition-all duration-300 hover:brightness-110
               `}
             >
               {tile === 'forest' && <TreeIcon />}
@@ -85,11 +86,10 @@ const GameWorld = ({ worldData, players }) => (
       {players.map((player) => (
         <div
           key={player.id}
-          className="absolute flex flex-col items-center"
+          className="absolute flex flex-col items-center transition-all duration-300 transform hover:scale-110"
           style={{
             left: player.x * TILE_SIZE,
             top: player.y * TILE_SIZE,
-            transition: 'all 0.3s',
             zIndex: 10,
           }}
         >
@@ -108,12 +108,12 @@ const GameWorld = ({ worldData, players }) => (
           )}
           
           {/* Player avatar */}
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-lg">
+          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-indigo-400 shadow-lg">
             <img src={getAvatarUrl(player.name)} alt={player.name} className="w-full h-full" />
           </div>
           
           {/* Player name */}
-          <div className="text-xs mt-1 font-semibold bg-black/50 text-white px-2 py-1 rounded-full">
+          <div className="text-xs mt-1 font-semibold bg-indigo-900/80 text-white px-2 py-1 rounded-full shadow-lg">
             {player.name}
           </div>
         </div>

@@ -1,35 +1,30 @@
 import { useCallback } from 'react';
-import { WORLD_SIZE, TERRAIN_TYPES } from '../constants';
+import { TERRAIN_TYPES } from '../constants';
 
-const useMovement = (currentPlayer, setCurrentPlayer, players, setPlayers, worldData, collectItems) => {
-  const checkCollision = useCallback((x, y) => {
-    const terrain = worldData.tiles[y][x];
-    if (!TERRAIN_TYPES[terrain].walkable) return true;
-    return players.some(p => p.id !== currentPlayer.id && p.x === x && p.y === y);
-  }, [currentPlayer.id, players, worldData.tiles]);
+const useMovement = (worldSize) => {
+  const movePlayer = useCallback((player, direction, worldData) => {
+    let newX = player.x;
+    let newY = player.y;
 
-  const handleMovement = useCallback((key, newX = currentPlayer.x, newY = currentPlayer.y, player = currentPlayer) => {
-    switch (key) {
-      case 'w': newY = Math.max(0, newY - 1); break;
-      case 'x': newY = Math.min(WORLD_SIZE - 1, newY + 1); break;
-      case 'a': newX = Math.max(0, newX - 1); break;
-      case 'd': newX = Math.min(WORLD_SIZE - 1, newX + 1); break;
-      default: break;
+    switch (direction) {
+      case 'up': newY = Math.max(0, player.y - 1); break;
+      case 'down': newY = Math.min(worldSize - 1, player.y + 1); break;
+      case 'left': newX = Math.max(0, player.x - 1); break;
+      case 'right': newX = Math.min(worldSize - 1, player.x + 1); break;
     }
 
-    if (!checkCollision(newX, newY)) {
-      const newPlayer = { ...player, x: newX, y: newY };
-      if (player.id === currentPlayer.id) {
-        setCurrentPlayer(newPlayer);
-        collectItems(newX, newY);  // Call collectItems after movement
+    // Check if the new position is valid (not a blocking terrain)
+    if (worldData && worldData.tiles) {
+      const newTile = worldData.tiles[newY][newX];
+      if (TERRAIN_TYPES[newTile].blocking) {
+        return { x: player.x, y: player.y }; // Return original position if blocked
       }
-      setPlayers(prev => prev.map(p => p.id === player.id ? newPlayer : p));
-      return false; // Movement successful
     }
-    return true; // Collision detected
-  }, [currentPlayer, setCurrentPlayer, players, setPlayers, checkCollision, collectItems]);
 
-  return { handleMovement };
+    return { x: newX, y: newY };
+  }, [worldSize]);
+
+  return { movePlayer };
 };
 
 export default useMovement;

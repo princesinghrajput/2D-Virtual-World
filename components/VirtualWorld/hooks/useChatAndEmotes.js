@@ -1,45 +1,50 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
-const useChatAndEmotes = (players, setPlayers, currentPlayer) => {
+const useChatAndEmotes = (players, setPlayers, currentPlayer, socket) => {
   const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState([]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('new_message', (message) => {
+        console.log('New message received in hook:', message);
+        setChatMessages(prev => [...prev, message]);
+      });
+
+      socket.on('player_emote', ({ id, emote }) => {
+        setPlayers(prev => prev.map(p => 
+          p.id === id ? { ...p, emote } : p
+        ));
+
+        setTimeout(() => {
+          setPlayers(prev => prev.map(p => 
+            p.id === id ? { ...p, emote: null } : p
+          ));
+        }, 2000);
+      });
+    }
+  }, [socket, setPlayers]);
 
   const sendChat = useCallback((message) => {
-    if (!message.trim()) return;
+    if (!message.trim() || !socket || !currentPlayer) return;
     
-    setPlayers(prev => prev.map(p => 
-      p.id === currentPlayer.id 
-        ? { ...p, chat: message } 
-        : p
-    ));
-
-    setTimeout(() => {
-      setPlayers(prev => prev.map(p => 
-        p.id === currentPlayer.id 
-          ? { ...p, chat: null } 
-          : p
-      ));
-    }, 3000);
+    const newMessage = { player: currentPlayer.name, message };
+    console.log('Sending chat message:', newMessage);
+    socket.emit('chat_message', newMessage);
+    
+    // Remove this line to prevent adding the message locally
+    // setChatMessages(prev => [...prev, newMessage]);
     
     setChatInput('');
-  }, [currentPlayer.id, setPlayers]);
+  }, [currentPlayer, socket]);
 
   const sendEmote = useCallback((emote) => {
-    setPlayers(prev => prev.map(p => 
-      p.id === currentPlayer.id 
-        ? { ...p, emote } 
-        : p
-    ));
+    if (!socket || !currentPlayer) return;
 
-    setTimeout(() => {
-      setPlayers(prev => prev.map(p => 
-        p.id === currentPlayer.id 
-          ? { ...p, emote: null } 
-          : p
-      ));
-    }, 2000);
-  }, [currentPlayer.id, setPlayers]);
+    socket.emit('player_emote', { id: currentPlayer.id, emote });
+  }, [currentPlayer, socket]);
 
-  return { chatInput, setChatInput, sendChat, sendEmote };
+  return { chatInput, setChatInput, sendChat, sendEmote, chatMessages, setChatMessages };
 };
 
 export default useChatAndEmotes;

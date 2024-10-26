@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { WORLD_SIZE, TILE_SIZE, TERRAIN_TYPES, COLLECTIBLE_TYPES, getAvatarUrl } from './constants';
 
@@ -39,12 +40,22 @@ const StarIcon = () => (
   </svg>
 );
 
-const GameWorld = ({ worldData, players }) => (
-  <Card className="p-4 bg-gradient-to-br from-gray-900/90 to-indigo-900/90 backdrop-blur-lg shadow-2xl rounded-2xl border border-indigo-500/50">
-    <div className="relative overflow-hidden rounded-lg" style={{ 
-      width: WORLD_SIZE * TILE_SIZE,
-      height: WORLD_SIZE * TILE_SIZE,
-    }}>
+const GameWorld = ({ worldData, players, villains, powerUps, obstacles }) => {
+  if (!worldData || !worldData.tiles) {
+    return <div className="text-white text-2xl">Loading world...</div>;
+  }
+
+  return (
+    <motion.div 
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="relative overflow-hidden rounded-lg shadow-2xl"
+      style={{ 
+        width: WORLD_SIZE * TILE_SIZE,
+        height: WORLD_SIZE * TILE_SIZE,
+      }}
+    >
       {/* Render world tiles */}
       {worldData.tiles.map((row, y) => (
         <div key={y} className="flex">
@@ -66,25 +77,76 @@ const GameWorld = ({ worldData, players }) => (
       ))}
       
       {/* Render collectible items */}
-      {worldData.items.map((item) => (
-        <div
+      {worldData.items && worldData.items.map((item) => (
+        <motion.div
           key={item.id}
-          className="absolute flex items-center justify-center w-10 h-10"
+          className="absolute"
           style={{
             left: item.x * TILE_SIZE,
             top: item.y * TILE_SIZE,
-            zIndex: 5,
+            width: TILE_SIZE,
+            height: TILE_SIZE,
           }}
+          animate={{ y: [0, -5, 0] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
         >
           {item.type === 'coin' && <CoinIcon />}
           {item.type === 'gem' && <GemIcon />}
           {item.type === 'star' && <StarIcon />}
-        </div>
+        </motion.div>
+      ))}
+      
+      {/* Render power-ups */}
+      {powerUps && powerUps.map((powerUp, index) => (
+        <motion.div
+          key={`powerup-${index}`}
+          className="absolute w-8 h-8 flex items-center justify-center text-2xl"
+          style={{
+            left: powerUp.x * TILE_SIZE,
+            top: powerUp.y * TILE_SIZE,
+            zIndex: 20,
+          }}
+        >
+          {powerUp.name === 'Speed Boost' ? '⚡' : powerUp.name === 'Invincibility' ? '🛡️' : '✨'}
+        </motion.div>
+      ))}
+
+      {/* Render obstacles */}
+      {obstacles && obstacles.map((obstacle, index) => (
+        <motion.div
+          key={`obstacle-${index}`}
+          className="absolute w-8 h-8 flex items-center justify-center text-2xl"
+          style={{
+            left: obstacle.x * TILE_SIZE,
+            top: obstacle.y * TILE_SIZE,
+            zIndex: 20,
+          }}
+        >
+          {obstacle.name === 'Mud' ? '💩' : obstacle.name === 'Trap' ? '🕸️' : '☠️'}
+        </motion.div>
+      ))}
+      
+      {/* Render villains */}
+      {villains && villains.map((villain) => (
+        <motion.div
+          key={villain.id}
+          className="absolute flex flex-col items-center transition-all duration-300 transform hover:scale-110"
+          style={{
+            left: villain.x * TILE_SIZE,
+            top: villain.y * TILE_SIZE,
+            zIndex: 15,
+          }}
+        >
+          <div className="text-4xl">{villain.emoji}</div>
+          <div className="text-xs mt-1 font-semibold bg-red-900/80 text-white px-2 py-1 rounded-full shadow-lg">
+            {villain.name}
+          </div>
+        </motion.div>
       ))}
       
       {/* Render players */}
-      {players.map((player) => (
-        <div
+      {players && players.map((player) => (
+        <motion.div
           key={player.id}
           className="absolute flex flex-col items-center transition-all duration-300 transform hover:scale-110"
           style={{
@@ -116,10 +178,10 @@ const GameWorld = ({ worldData, players }) => (
           <div className="text-xs mt-1 font-semibold bg-indigo-900/80 text-white px-2 py-1 rounded-full shadow-lg">
             {player.name}
           </div>
-        </div>
+        </motion.div>
       ))}
-    </div>
-  </Card>
-);
+    </motion.div>
+  );
+};
 
 export default GameWorld;
